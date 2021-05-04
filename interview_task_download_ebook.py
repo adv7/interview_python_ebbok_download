@@ -39,8 +39,7 @@ class BasePage:
         elements_list = self.driver.find_elements_by_xpath(locator)
         if len(elements_list) > 0:
             return True
-        else:
-            return False
+        return False
 
     def get_single_attribute_value(self, locator, attribute):
         try:
@@ -80,8 +79,14 @@ class BasePage:
         except NoSuchElementException:
             print(f"msg: element with specified xpath: {locator} wasn't found")
 
+    def close_browser(self):
+        self.driver.quit()
+
 
 class HomePage(BasePage):
+    def accept_privacy_policy(self):
+        self.click_on('//*[@id="adroll_consent_accept"]')
+
     def hide_live_chat(self):
         self.click_on('//*[@id="bhr-chat-frame-body"]/div/div')
 
@@ -157,45 +162,41 @@ class FileManager:
 
 class TestEbookDownloading(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
-        pass
-
-    def test_is_title_exist(self):
-        searched_ebook_title = input("Enter ebook title: ")
+    def setUpClass(cls) -> None:
+        cls.searched_ebook_title = input("Enter ebook title: ")
         driver = initialize_driver()
-        hp = HomePage(driver)
-        hp.hide_live_chat()
-        hp.click_on_resources()
-        hp.click_on_ebooks()
+        cls.hp = HomePage(driver)
+        cls.elp = EbooksListPage(driver)
+        cls.dfp = DataFormPage(driver)
 
-        elp = EbooksListPage(driver)
-        self.assertIsNotNone(elp.is_searched_title_available(searched_ebook_title))
-        driver.quit()
+    def test_1_is_title_exist(self):
+        self.hp.accept_privacy_policy()
+        self.hp.hide_live_chat()
+        self.hp.click_on_resources()
+        self.hp.click_on_ebooks()
 
-    def test_ebook_download(self):
-        searched_ebook_title = input("Enter ebook title: ")
-        driver = initialize_driver()
-        hp = HomePage(driver)
-        hp.hide_live_chat()
-        hp.click_on_resources()
-        hp.click_on_ebooks()
+        self.assertIsNotNone(self.elp.is_searched_title_available(self.searched_ebook_title))
 
-        elp = EbooksListPage(driver)
-        elp.select_ebook_to_download(searched_ebook_title)
-        elp.switch_to_tab(1)
+    def test_2_ebook_download(self):
+        # self.hp.accept_privacy_policy()
+        # self.hp.hide_live_chat()
+        # self.hp.click_on_resources()
+        # self.hp.click_on_ebooks()
 
-        dfp = DataFormPage(driver)
-        dfp.submit_data_form()
+        self.elp.select_ebook_to_download(self.searched_ebook_title)
+        self.elp.switch_to_tab(1)
+
+        self.dfp.submit_data_form()
 
         time.sleep(5)
-        file_name = dfp.get_file_name()
-        print(file_name)
-        dfp.download_pdf_file()
+        file_name = self.dfp.get_file_name()
+        # print(file_name)
+        self.dfp.download_pdf_file()
         time.sleep(10)
-        driver.quit()
+        self.dfp.close_browser()
 
         fm = FileManager(file_name)
-        print(f"is exist file: {fm.is_file_downloaded()}")
+        # print(f"is exist file: {fm.is_file_downloaded()}")
         self.assertTrue(fm.is_file_downloaded())
         fm.delete_downloaded_file()
 

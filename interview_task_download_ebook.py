@@ -71,16 +71,20 @@ class BasePage:
         self.driver.quit()
 
 
-class HomePage(BasePage):
+class SalesmanagoPage(BasePage):
+    def hide_live_chat_if_open(self):
+        if self.check_element_exists_by_xpath('//iframe[@class="bhr-chat__messenger"]'):
+            self.switch_to_iframe('//iframe[@class="bhr-chat__messenger"]')
+            self.click_on('//*[@class="bhr-chat-messenger__minimalise"]')
+            self.switch_to_default()
+
+
+class HomePage(SalesmanagoPage):
     def accept_privacy_policy(self):
         self.click_on('//*[@id="adroll_consent_accept"]')
 
     def hide_live_chat(self):
-        is_lc = self.check_element_exists_by_xpath('//iframe[@class="bhr-chat__messenger"]')
-        if is_lc:
-            self.switch_to_iframe('//iframe[@class="bhr-chat__messenger"]')
-            self.click_on('//*[@class="bhr-chat-messenger__minimalise"]')
-            self.switch_to_default()
+        self.hide_live_chat_if_open()
 
     def click_on_resources(self):
         self.click_on('//*[a="resources"]')
@@ -110,7 +114,7 @@ class EbooksListPage(BasePage):
         self.click_element_found_by_url(self.is_searched_title_available(user_input_ebook_title))
 
 
-class DataFormPage(BasePage):
+class DataFormPage(SalesmanagoPage):
     def get_button_locations_dependent_on_form_types(self):
         if self.check_element_exists_by_xpath("//*[@class=\"btn center-block form-btn form-btn\" and @type=\"submit\"]"):
             return ("//*[@class=\"btn center-block form-btn form-btn\" and @type=\"submit\"]",
@@ -127,6 +131,7 @@ class DataFormPage(BasePage):
         self.enter_data_to_form_field("//*[@class=\"form-control\" and @name=\"url\"]", "https://google.com")
         self.enter_data_to_form_field("//*[@class=\"form-control\" and @name=\"phoneNumber\"]", "123123123")
 
+        self.hide_live_chat_if_open()
         if self.check_element_exists_by_xpath('//*[@class="quote__content"]'):
             self.click_on('//*[@class="quote__close"]')
 

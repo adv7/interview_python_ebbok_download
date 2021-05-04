@@ -24,60 +24,48 @@ class BasePage:
         self.driver = driver
 
     def click_on(self, locator):
-        try:
-            self.driver.find_element_by_xpath(locator).click()
-        except NoSuchElementException:
-            print(f"msg: element with xpath: {locator} wasn't found")
+        self.driver.find_element_by_xpath(locator).click()
 
     def click_on_by_javascript(self, locator):
-        try:
-            self.driver.execute_script("arguments[0].click();", self.driver.find_element_by_xpath(locator))
-        except NoSuchElementException:
-            print(f"msg: element with xpath: {locator} wasn't found")
+        self.driver.execute_script("arguments[0].click();", self.driver.find_element_by_xpath(locator))
 
-    def is_xpath_exist(self, locator):
-        elements_list = self.driver.find_elements_by_xpath(locator)
-        if len(elements_list) > 0:
-            return True
-        return False
+    def click_element_found_by_url(self, locator):
+        self.driver.find_element_by_xpath('//a[@href="' + locator + '"]').click()
 
-    def get_single_attribute_value(self, locator, attribute):
-        try:
-            return self.driver.find_element_by_xpath(locator).get_attribute(attribute)
-        except NoSuchElementException:
-            print(f"msg: element with xpath: {locator} wasn't found")
+    def switch_to_iframe(self, locator):
+        self.driver.switch_to.frame(self.driver.find_element_by_xpath(locator))
 
-    def get_all_attributes_by_class_name(self, locator):
-        try:
-            attribute_name = self.get_attribute_name(locator)
-
-            elements_list = self.driver.find_elements_by_class_name(locator)
-            attribute_values_list = [element.get_attribute(attribute_name) for element in elements_list]
-            return attribute_values_list
-        except NoSuchElementException:
-            print(f"msg: elements with specified class name: {locator} weren't found")
-
-    @staticmethod
-    def get_attribute_name(locator):
-        try:
-            return re.search(r"\[\w+\]", locator).group(0).replace("[", "").replace("]", "")
-        except AttributeError:
-            return ""
-
-    def choose_element_by_url(self, locator):
-        try:
-            self.driver.find_element_by_xpath('//a[@href="' + locator + '"]').click()
-        except NoSuchElementException:
-            print(f"msg: element with specified url: {locator} wasn't found")
+    def switch_to_default(self):
+        self.driver.switch_to.default_content()
 
     def switch_to_tab(self, tab_index):
         self.driver.switch_to.window(self.driver.window_handles[tab_index])
 
-    def enter_data_to_form_field(self, locator, value):
+    def check_element_exists_by_xpath(self, locator):
         try:
-            self.driver.find_element_by_xpath(locator).send_keys(value)
+            return bool(self.driver.find_element_by_xpath(locator))
         except NoSuchElementException:
-            print(f"msg: element with specified xpath: {locator} wasn't found")
+            return False
+
+    def get_single_attribute_value(self, locator, attribute):
+        return self.driver.find_element_by_xpath(locator).get_attribute(attribute)
+
+    def get_all_attributes_by_class_name(self, locator):
+        attribute_name = self.get_attribute_name(locator)
+
+        elements_list = self.driver.find_elements_by_class_name(locator)
+        attribute_values_list = [element.get_attribute(attribute_name) for element in elements_list]
+        return attribute_values_list
+
+    @staticmethod
+    def get_attribute_name(locator):
+        attribute_name = re.search(r"\[\w+\]", locator).group(0).replace("[", "").replace("]", "")
+        if len(attribute_name) > 0:
+            return attribute_name
+        return ""
+
+    def enter_data_to_form_field(self, locator, value):
+        self.driver.find_element_by_xpath(locator).send_keys(value)
 
     def close_browser(self):
         self.driver.quit()
@@ -88,10 +76,14 @@ class HomePage(BasePage):
         self.click_on('//*[@id="adroll_consent_accept"]')
 
     def hide_live_chat(self):
-        self.click_on('//*[@id="bhr-chat-frame-body"]/div/div')
+        is_lc = self.check_element_exists_by_xpath('//iframe[@class="bhr-chat__messenger"]')
+        if is_lc:
+            self.switch_to_iframe('//iframe[@class="bhr-chat__messenger"]')
+            self.click_on('//*[@class="bhr-chat-messenger__minimalise"]')
+            self.switch_to_default()
 
     def click_on_resources(self):
-        self.click_on('//*[@class="custom-lowbar__link active-menu-item"]')
+        self.click_on('//*[a="resources"]')
 
     def click_on_ebooks(self):
         self.click_on_by_javascript('//*[@class="dropdown__element"]/a[@href="/info/knowledgecenter.htm"]')
@@ -101,10 +93,8 @@ class EbooksListPage(BasePage):
     def get_ebook_urls_list(self):
         return self.get_all_attributes_by_class_name('ebook__img--container [href]')
 
-    """ TEST IS EBOOK WITH GIVEN TITLE EXIST """
-    """ ebook live chat - existed title to test """
-
     def is_searched_title_available(self, user_input_ebook_title):
+        # TEST IS EBOOK WITH GIVEN TITLE EXIST
         for url_with_title in self.get_ebook_urls_list():
             raw_title = re.sub(r"(https://)(www\.)*(salesmanago.com/info/)", "", url_with_title).replace(".htm",
                                                                                                          "").replace(
@@ -117,12 +107,12 @@ class EbooksListPage(BasePage):
         return None
 
     def select_ebook_to_download(self, user_input_ebook_title):
-        self.choose_element_by_url(self.is_searched_title_available(user_input_ebook_title))
+        self.click_element_found_by_url(self.is_searched_title_available(user_input_ebook_title))
 
 
 class DataFormPage(BasePage):
     def get_button_locations_dependent_on_form_types(self):
-        if self.is_xpath_exist("//*[@class=\"btn center-block form-btn form-btn\" and @type=\"submit\"]"):
+        if self.check_element_exists_by_xpath("//*[@class=\"btn center-block form-btn form-btn\" and @type=\"submit\"]"):
             return ("//*[@class=\"btn center-block form-btn form-btn\" and @type=\"submit\"]",
                     "//*[@class=\"thanks-message\"]/div/a[contains(@href, \".pdf\")]")
         else:
@@ -136,17 +126,20 @@ class DataFormPage(BasePage):
         self.enter_data_to_form_field("//*[@class=\"form-control\" and @name=\"company\"]", "company")
         self.enter_data_to_form_field("//*[@class=\"form-control\" and @name=\"url\"]", "https://google.com")
         self.enter_data_to_form_field("//*[@class=\"form-control\" and @name=\"phoneNumber\"]", "123123123")
+
+        if self.check_element_exists_by_xpath('//*[@class="quote__content"]'):
+            self.click_on('//*[@class="quote__close"]')
+
         self.click_on(self.get_button_locations_dependent_on_form_types()[0])
 
     def get_file_name(self):
         file_url = self.get_single_attribute_value(self.get_button_locations_dependent_on_form_types()[1], "href")
         return re.search(r"/\w+\.pdf", file_url).group(0).replace("/", "")
 
-    """ WHEN OPENING FILE DOWNLOAD STARTS AUTOMATICALLY (WEBDRIVER SETTINGS) """
-
     def download_pdf_file(self):
+        # WHEN OPENING FILE DOWNLOAD STARTS AUTOMATICALLY (WEBDRIVER SETTINGS)
         self.click_on_by_javascript(self.get_button_locations_dependent_on_form_types()[1])
-        """ WAIT TIL DOWNLOAD PROCESS ENDS """
+        # WAIT TIL DOWNLOAD PROCESS ENDS
 
 
 class FileManager:
@@ -165,38 +158,32 @@ class TestEbookDownloading(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.searched_ebook_title = input("Enter ebook title: ")
         driver = initialize_driver()
-        cls.hp = HomePage(driver)
-        cls.elp = EbooksListPage(driver)
-        cls.dfp = DataFormPage(driver)
+        home_page = HomePage(driver)
+        home_page.accept_privacy_policy()
+        time.sleep(2)
+        home_page.hide_live_chat()
+        home_page.click_on_resources()
+        home_page.click_on_ebooks()
+
+        cls.ebook_list_page = EbooksListPage(driver)
+        cls.data_form_page = DataFormPage(driver)
 
     def test_1_is_title_exist(self):
-        self.hp.accept_privacy_policy()
-        self.hp.hide_live_chat()
-        self.hp.click_on_resources()
-        self.hp.click_on_ebooks()
-
-        self.assertIsNotNone(self.elp.is_searched_title_available(self.searched_ebook_title))
+        self.assertIsNotNone(self.ebook_list_page.is_searched_title_available(self.searched_ebook_title))
 
     def test_2_ebook_download(self):
-        # self.hp.accept_privacy_policy()
-        # self.hp.hide_live_chat()
-        # self.hp.click_on_resources()
-        # self.hp.click_on_ebooks()
+        self.ebook_list_page.select_ebook_to_download(self.searched_ebook_title)
+        self.ebook_list_page.switch_to_tab(1)
 
-        self.elp.select_ebook_to_download(self.searched_ebook_title)
-        self.elp.switch_to_tab(1)
-
-        self.dfp.submit_data_form()
+        self.data_form_page.submit_data_form()
 
         time.sleep(5)
-        file_name = self.dfp.get_file_name()
-        # print(file_name)
-        self.dfp.download_pdf_file()
+        file_name = self.data_form_page.get_file_name()
+        self.data_form_page.download_pdf_file()
         time.sleep(10)
-        self.dfp.close_browser()
+        self.data_form_page.close_browser()
 
         fm = FileManager(file_name)
-        # print(f"is exist file: {fm.is_file_downloaded()}")
         self.assertTrue(fm.is_file_downloaded())
         fm.delete_downloaded_file()
 

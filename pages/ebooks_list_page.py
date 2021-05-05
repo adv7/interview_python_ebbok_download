@@ -1,4 +1,4 @@
-from salesmanago_page import SalesmanagoPage
+from pages.salesmanago_page import SalesmanagoPage
 import re
 
 

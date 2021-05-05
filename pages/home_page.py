@@ -1,9 +1,10 @@
-from salesmanago_page import SalesmanagoPage
+from pages.salesmanago_page import SalesmanagoPage
 
 
 class HomePage(SalesmanagoPage):
     def accept_privacy_policy(self):
-        self.click_on('//*[@id="adroll_consent_accept"]')
+        if self.check_element_exists_by_xpath('//*[@id="adroll_consent_accept"]'):
+            self.click_on('//*[@id="adroll_consent_accept"]')
 
     def hide_live_chat(self):
         self.hide_live_chat_if_open()

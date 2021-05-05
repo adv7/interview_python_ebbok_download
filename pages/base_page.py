@@ -6,6 +6,9 @@ class BasePage:
     def __init__(self, driver):
         self.driver = driver
 
+    def navigate(self, url):
+        self.driver.get(str(url))
+
     def click_on(self, locator):
         self.driver.find_element_by_xpath(locator).click()
 

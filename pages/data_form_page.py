@@ -1,5 +1,5 @@
 from pages.salesmanago_page import SalesmanagoPage
-import datetime
+from datetime import datetime
 import re
 
 

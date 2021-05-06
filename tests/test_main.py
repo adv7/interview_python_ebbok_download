@@ -2,6 +2,7 @@ from pages.home_page import HomePage
 from pages.ebooks_list_page import EbooksListPage
 from pages.data_form_page import DataFormPage
 from utilities import initialize_driver, FileManager
+from parameterized import parameterized
 import unittest
 import pytest
 import time
@@ -24,11 +25,17 @@ class TestEbookDownloading(unittest.TestCase):
     # def tearDown(self) -> None:
     #     self.ebook_list_page.navigate("https://www.salesmanago.com/info/knowledgecenter.htm")
 
-    @pytest.mark.parametrize('test_input',
-                             ["how marketing automation is transformed by ai and data science"], indirect=True)
-    def test_1_is_title_exist(self, test_input):
-        assert self.ebook_list_page.is_searched_title_available(test_input) is not None
+    # @pytest.fixture
+    # def title(self, req):
+    #     return req
 
+    # @pytest.mark.parametrize('title',
+    #                          ["how marketing automation is transformed by ai and data science"], indirect=True)
+    @parameterized.expand([('how marketing automation is transformed by ai and data science',)])
+    def test_1_is_title_exist(self, title):
+        assert self.ebook_list_page.is_searched_title_available(title) is not None
+
+    @parameterized.expand([('how marketing automation is transformed by ai and data science',)])
     def test_2_ebook_download(self, test_input):
         self.ebook_list_page.select_ebook_to_download(test_input)
         self.ebook_list_page.switch_to_tab(1)
@@ -44,3 +51,4 @@ class TestEbookDownloading(unittest.TestCase):
         fm = FileManager(file_name)
         assert fm.is_file_downloaded() is True
         fm.delete_downloaded_file()
+

@@ -1,6 +1,7 @@
 from selenium import webdriver
 import pathlib
 import os
+import csv
 
 
 def initialize_driver():
@@ -14,11 +15,19 @@ def initialize_driver():
     return init_driver
 
 
+def get_ebook_titles(path):
+    with open(path) as file:
+        reader = csv.reader(file, delimiter=',')
+        titles = [col1 for col1 in reader]
+        return titles
+
+
 class FileManager:
     def __init__(self, file):
         self.file = file
 
     def is_file_downloaded(self):
+        print(f"is_file_name: {self.file}")
         return os.path.isfile(f"{pathlib.Path().absolute()}\\downloads\\{self.file}")
 
     def delete_downloaded_file(self):

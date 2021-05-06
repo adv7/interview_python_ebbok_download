@@ -27,6 +27,11 @@ class BasePage:
     def switch_to_tab(self, tab_index):
         self.driver.switch_to.window(self.driver.window_handles[tab_index])
 
+    def close_tab_with_index_if_more_than_one(self, tab_index):
+        if len(self.driver.window_handles) > 1:
+            self.switch_to_tab(tab_index)
+            self.driver.close()
+
     def check_element_exists_by_xpath(self, locator):
         try:
             return bool(self.driver.find_element_by_xpath(locator))

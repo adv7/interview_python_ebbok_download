@@ -5,6 +5,7 @@ from utilities import initialize_driver, FileManager, get_ebook_titles
 from parameterized import parameterized
 import unittest
 import time
+import os
 
 
 class TestEbookDownloading(unittest.TestCase):
@@ -26,11 +27,11 @@ class TestEbookDownloading(unittest.TestCase):
         self.data_form_page.switch_to_tab(0)
         self.ebook_list_page.navigate("https://www.salesmanago.com/info/knowledgecenter.htm")
 
-    @parameterized.expand(get_ebook_titles('../ebook_titles.csv'))
+    @parameterized.expand(get_ebook_titles(os.path.abspath("ebook_titles.csv")))
     def test_is_title_exist(self, title):
         assert self.ebook_list_page.is_searched_title_available(title) is not None
 
-    @parameterized.expand(get_ebook_titles('../ebook_titles.csv'))
+    @parameterized.expand(get_ebook_titles(os.path.abspath("ebook_titles.csv")))
     def test_ebook_download(self, test_input):
         self.ebook_list_page.select_ebook_to_download(test_input)
         self.ebook_list_page.switch_to_tab(1)

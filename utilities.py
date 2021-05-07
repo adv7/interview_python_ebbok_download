@@ -9,6 +9,7 @@ def initialize_driver():
     chrome_options = webdriver.ChromeOptions()
     prefs = {"plugins.always_open_pdf_externally": True, "download.default_directory": download_dir}
     chrome_options.add_experimental_option("prefs", prefs)
+    chrome_options.add_argument("--start-maximized")
     init_driver = webdriver.Chrome(options=chrome_options)
     init_driver.get("https://www.salesmanago.com/")
     return init_driver
